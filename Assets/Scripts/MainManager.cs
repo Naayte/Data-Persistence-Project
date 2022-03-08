@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor.EditorTools;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
 
 public class MainManager : MonoBehaviour
 {
@@ -12,20 +14,36 @@ public class MainManager : MonoBehaviour
 
     public Text ScoreText;
     public GameObject GameOverText;
-    
+
     private bool m_Started = false;
-    private int m_Points;
-    
+    public int m_Points;
+
+    [SerializeField]
+    private Text txtHighScore;
+    private int highScore; // Initiated with MainManager.cs & never reset within script.
+    private string highScorePlayer;
+
+    public string playerName;
+
     private bool m_GameOver = false;
 
-    
+
     // Start is called before the first frame update
     void Start()
     {
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
-        
-        int[] pointCountArray = new [] {1,1,2,2,5,5};
+
+        playerName = PersistentDataManager.Instance.PlayerName;
+        highScore = PersistentDataManager.Instance.currentHighScore;
+        highScorePlayer = PersistentDataManager.Instance.currentHighScoreName;
+
+        if (highScore > 0)
+        {
+            txtHighScore.text = "High Score: " + highScorePlayer + $" {highScore}";
+        }
+
+        int[] pointCountArray = new[] { 1, 1, 2, 2, 5, 5 };
         for (int i = 0; i < LineCount; ++i)
         {
             for (int x = 0; x < perLine; ++x)
@@ -66,11 +84,20 @@ public class MainManager : MonoBehaviour
     {
         m_Points += point;
         ScoreText.text = $"Score : {m_Points}";
+        if (m_Points > highScore)
+        {
+            txtHighScore.text = "High Score: " + playerName + $"({m_Points})";
+        }
     }
 
     public void GameOver()
     {
+        if (m_Points > highScore)
+        {
+            PersistentDataManager.Instance.SaveHighScore();
+        }
         m_GameOver = true;
         GameOverText.SetActive(true);
     }
+
 }
